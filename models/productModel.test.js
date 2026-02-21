@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Product from "./productModel.js";
 
+// Khoo Jing Xiang, A0252605L
+
 describe("Product model schema validation", () => {
   afterAll(async () => {
     await mongoose.disconnect().catch(() => {});
