@@ -26,7 +26,7 @@ describe("authController - Profile and Orders", () => {
 
     // Ashley Chang Le Xuan, A0252633J - updateProfileController tests
     describe("updateProfileController", () => {
-        it("should update user profile successfully", async () => {
+        it("should update user profile successfully (EP: password not changed)", async () => {
             // Arrange
             req.body = { name: "John Doe", email: "john@test.com", phone: "1234567890", address: "123 Main St" };
             const mockUser = { name: "Old Name", password: "oldpass", phone: "0000000000", address: "Old Address" };
@@ -57,7 +57,7 @@ describe("authController - Profile and Orders", () => {
             });
         });
 
-        it("should update password when provided and valid", async () => {
+        it("should update password when provided and valid (EP: only password changed)", async () => {
             // Arrange
             req.body = { password: "newPassword123", name: "John" };
             const mockUser = { name: "John", password: "oldpass", phone: "123", address: "addr" };
@@ -121,7 +121,7 @@ describe("authController - Profile and Orders", () => {
             });
         });
 
-        it("should preserve existing user data when fields not provided", async () => {
+        it("should preserve existing user data when fields not provided (EP: Only name changes)", async () => {
             // Arrange
             req.body = { name: "New Name" };
             const mockUser = { name: "Old Name", password: "pass", phone: "1234567890", address: "123 Main" };
@@ -139,6 +139,36 @@ describe("authController - Profile and Orders", () => {
                     name: "New Name",
                     password: mockUser.password,
                     phone: mockUser.phone,
+                    address: mockUser.address,
+                },
+                { new: true }
+            );
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.send).toHaveBeenCalledWith({
+                success: true,
+                message: "Profile Updated Successfully",
+                updatedUser: mockUpdatedUser,
+            });
+        });
+
+        it("should fallback to existing name when name is not provided (EP: Name not changed)", async () => {
+            // Arrange
+            req.body = { phone: "9999999" };
+            const mockUser = { name: "Existing Name", password: "pass", phone: "1234567890", address: "123 Main" };
+            const mockUpdatedUser = { ...mockUser, phone: "9999999" };
+            userModel.findById.mockResolvedValue(mockUser);
+            userModel.findByIdAndUpdate.mockResolvedValue(mockUpdatedUser);
+
+            // Act
+            await updateProfileController(req, res);
+
+            // Assert
+            expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+                "user123",
+                {
+                    name: mockUser.name,
+                    password: mockUser.password,
+                    phone: "9999999",
                     address: mockUser.address,
                 },
                 { new: true }
