@@ -94,7 +94,7 @@ describe("Order Model", () => {
     describe("Status Field Validation", () => {
         test("should accept all valid status values (EP: Valid Status)", async () => {
             // Arrange
-            const validStatuses = ["Not Process", "Processing", "Shipped", "deliverd", "cancel"];
+            const validStatuses = ["Not Processed", "Processing", "Shipped", "Delivered", "Cancelled"];
 
             for (const status of validStatuses) {
                 // Act
@@ -110,7 +110,7 @@ describe("Order Model", () => {
             }
         });
 
-        test("should set default status to 'Not Process' (EP: Undefined)", async () => {
+        test("should set default status to 'Not Processed' (EP: Undefined)", async () => {
             // Arrange
             const orderData = {
                 products: [new mongoose.Types.ObjectId()],
@@ -121,7 +121,7 @@ describe("Order Model", () => {
             const order = await Order.create(orderData);
 
             // Assert
-            expect(order.status).toBe("Not Process");
+            expect(order.status).toBe("Not Processed");
         });
 
         test("should reject invalid status (EP: Invalid Status)", async () => {
@@ -145,7 +145,7 @@ describe("Order Model", () => {
             expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
         });
 
-        test("should default to 'Not Process' when status is null (EP: Null)", async () => {
+        test("should default to 'Not Processed' when status is null (EP: Null)", async () => {
             // Arrange
             const orderData = {
                 products: [new mongoose.Types.ObjectId()],
@@ -157,7 +157,7 @@ describe("Order Model", () => {
             const order = await Order.create(orderData);
 
             // Assert
-            expect(order.status).toBe("Not Process");
+            expect(order.status).toBe("Not Processed");
         });
 
         test("should reject empty string status (EP: Empty String)", async () => {
