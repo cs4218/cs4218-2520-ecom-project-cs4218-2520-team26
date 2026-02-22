@@ -1,24 +1,52 @@
 import categoryModel from "../models/categoryModel.js";
-import {
-  categoryController,
-  singleCategoryController,
-} from "./categoryController.js";
+import slugify from "slugify";
 
-jest.mock("../models/categoryModel.js", () => ({
-  __esModule: true,
-  default: {
-    find: jest.fn(),
-    findOne: jest.fn(),
-  },
+import {
+    categoryController,
+    singleCategoryController,
+    createCategoryController,
+    updateCategoryController,
+    deleteCategoryController,
+} from "../controllers/categoryController.js";
+
+ 
+jest.mock("../models/categoryModel.js", () => {
+    const saveMock = jest.fn();
+
+    const mockModel = jest.fn(() => ({
+        save: saveMock,
+    }));
+
+    mockModel.find = jest.fn();
+    mockModel.findOne = jest.fn();
+    mockModel.findByIdAndUpdate = jest.fn();
+    mockModel.findByIdAndDelete = jest.fn();
+
+    return {
+        __esModule: true,
+        default: mockModel,
+    };
+});
+
+jest.mock("slugify", () => ({
+    __esModule: true,
+    default: jest.fn(),
 }));
 
+const mockResponse = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnValue(res);
+    res.send = jest.fn().mockReturnValue(res);
+    return res;
+};
+
 const createMockResponse = () => {
-  const res = {
-    status: jest.fn(),
-    send: jest.fn(),
-  };
-  res.status.mockReturnValue(res);
-  return res;
+    const res = {
+        status: jest.fn(),
+        send: jest.fn(),
+    };
+    res.status.mockReturnValue(res);
+    return res;
 };
 
 // Earnest Suprapmo, A0251966U
@@ -100,9 +128,9 @@ describe("singleCategoryController", () => {
       category,
     });
   });
-
+  
   it("logs an error and returns 500 when fetching a single category fails", async () => {
-    // Arrange
+  // Arrange
     const error = new Error("DB failure");
     categoryModel.findOne.mockRejectedValueOnce(error);
     const req = { params: { slug: "missing-slug" } };
@@ -126,4 +154,134 @@ describe("singleCategoryController", () => {
 
     consoleSpy.mockRestore();
   });
+});
+
+//Emberlynn Loo, A0255614E
+describe("createCategoryController", () => {
+
+  it("should return 401 if name is missing", async () => {
+      // Arrange
+      const req = { body: {} };
+      const res = mockResponse();
+
+      // Act
+      await createCategoryController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(401);
+  });
+
+  it("should return existing category", async () => {
+      // Arrange
+      const req = { body: { name: "Existing Category" } };
+      const res = mockResponse();
+
+      categoryModel.findOne.mockResolvedValue({ name: "Existing Category" });
+
+      // Act
+      await createCategoryController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it("should create new category", async () => {
+      // Arrange
+      const req = { body: { name: "New Category" } };
+      const res = mockResponse();
+
+      categoryModel.findOne.mockResolvedValue(null);
+      slugify.mockReturnValue("newCategory");
+
+      categoryModel.mockImplementation(() => ({
+          save: jest.fn().mockResolvedValue({ name: "New Category" }),
+      }));
+
+      // Act
+      await createCategoryController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it("should handle error", async () => {
+      // Arrange
+      const req = { body: { name: "Err" } };
+      const res = mockResponse();
+
+      categoryModel.findOne.mockRejectedValue(new Error("DB error"));
+
+      // Act
+      await createCategoryController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(500);
+  });
+});
+
+//Emberlynn Loo, A0255614E
+describe("updateCategoryController", () => {
+
+    it("should update category", async () => {
+        // Arrange
+        const req = { body: { name: "Updated" }, params: { id: "1" } };
+        const res = mockResponse();
+
+        slugify.mockReturnValue("updated");
+
+        categoryModel.findByIdAndUpdate.mockResolvedValue({ name: "Updated" });
+
+        // Act
+        await updateCategoryController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should handle error", async () => {
+        // Arrange
+        const req = { body: { name: "Err" }, params: { id: "1" } };
+        const res = mockResponse();
+
+        categoryModel.findByIdAndUpdate.mockRejectedValue(new Error());
+
+        // Act
+        await updateCategoryController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(500);
+    });
+});
+
+//Emberlynn Loo, A0255614E
+describe("deleteCategoryController", () => {
+
+    it("should delete category", async () => {
+        // Arrange
+        const req = { params: { id: "1" } };
+        const res = mockResponse();
+
+        categoryModel.findByIdAndDelete.mockResolvedValue();
+
+        // Act
+        await deleteCategoryController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should handle error", async () => {
+        // Arrange
+        const req = { params: { id: "1" } };
+        const res = mockResponse();
+
+        categoryModel.findByIdAndDelete.mockRejectedValue(new Error());
+
+        // Act
+        await deleteCategoryController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(500);
+    });
+
 });
