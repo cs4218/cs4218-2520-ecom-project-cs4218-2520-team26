@@ -117,7 +117,7 @@ describe("Orders Component", () => {
                     _id: "1",
                     status: "Processing",
                     buyer: { name: "John Doe" },
-                    createAt: new Date(),
+                    createdAt: new Date(),
                     payment: { success: true },
                     products: [
                         {
@@ -150,7 +150,7 @@ describe("Orders Component", () => {
                     _id: "1",
                     status: "Processing",
                     buyer: { name: "John Doe" },
-                    createAt: new Date(),
+                    createdAt: new Date(),
                     payment: { success: true },
                     products: [
                         { _id: "p1", name: "Product 1", description: "Test description", price: 100 },
@@ -160,7 +160,7 @@ describe("Orders Component", () => {
                     _id: "2",
                     status: "Shipped",
                     buyer: { name: "Jane Doe" },
-                    createAt: new Date(),
+                    createdAt: new Date(),
                     payment: { success: false },
                     products: [
                         { _id: "p2", name: "Product 2", description: "Another description", price: 200 },
@@ -189,7 +189,7 @@ describe("Orders Component", () => {
                     _id: "1",
                     status: "Processing",
                     buyer: { name: "John Doe" },
-                    createAt: new Date(),
+                    createdAt: new Date(),
                     payment: { success: true },
                     products: [],
                 },
@@ -213,7 +213,7 @@ describe("Orders Component", () => {
                     _id: "1",
                     status: "Delivered",
                     buyer: { name: "Jane Doe" },
-                    createAt: new Date(),
+                    createdAt: new Date(),
                     payment: { success: false },
                     products: [],
                 },
