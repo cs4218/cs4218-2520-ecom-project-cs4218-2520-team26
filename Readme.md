@@ -1,4 +1,28 @@
-# CS4218 Project - Virtual Vault
+# CS4218 Project Group 26 - Virtual Vault
+
+## MS1
+
+### MS1 CI URL
+[MS1 CI URL](https://github.com/cs4218/cs4218-2520-ecom-project-cs4218-2520-team26/actions/runs/22282337567/job/64454833743?pr=13)
+
+### Individual Contributions
+
+**Ashley Chang Le Xuan, A0252633J**
+- Client
+  - components/Form/SearchInput.js
+  - context/search.js
+  - pages/Search.js
+  - pages/admin/Users.js
+  - pages/user/Orders.js
+  - pages/user/Profile.js
+- Server
+  - controllers/authController.js
+    - updateProfileController
+    - getOrdersController
+    - getAllOrdersController
+    - orderStatusController
+  - models/orderModel.js
+
 
 ## 1. Project Introduction
 
