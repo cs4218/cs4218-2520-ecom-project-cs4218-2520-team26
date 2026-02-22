@@ -2,10 +2,6 @@ import JWT from "jsonwebtoken";
 import { requireSignIn, isAdmin } from "./authMiddleware.js";
 import userModel from "../models/userModel.js";
 
-/**
- * Created by: Nicholas Koh Zi Lun (A0272806B)
- */
-
 // Mocks
 jest.mock("jsonwebtoken", () => ({
     verify: jest.fn(),
@@ -15,7 +11,7 @@ jest.mock("../models/userModel.js", () => ({
     findById: jest.fn(),
 }));
 
-// Tests
+// Nicholas Koh Zi Lun (A0272806B) - Test suites for authMiddleware.js
 describe("authMiddleware", () => {
     let req, res, next;
 
@@ -55,25 +51,7 @@ describe("authMiddleware", () => {
             expect(next).toHaveBeenCalledTimes(1);
         });
 
-        it("returns 401 if token verification fails", async () => {
-            // Arrange
-            const error = new Error("Invalid token");
-            JWT.verify.mockImplementation(() => {
-                throw error;
-            });
-
-            // Act
-            await requireSignIn(req, res, next);
-
-            // Assert
-            expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.send).toHaveBeenCalledWith({
-                success: false,
-                message: "Unauthorized Access",
-            });
-        });
-
-        it("returns 401 if no authorization header is provided", async () => {
+        it("returns 401 if authorisation token is missing", async () => {
             // Arrange
             req.headers.authorization = null;
 
@@ -85,6 +63,24 @@ describe("authMiddleware", () => {
             expect(res.send).toHaveBeenCalledWith({
                 success: false,
                 message: "Authorization token is required",
+            });
+        });
+
+        it("returns 500 if an error occurs during token verification", async () => {
+            // Arrange
+            const error = new Error("Invalid token");
+            JWT.verify.mockImplementation(() => {
+                throw error;
+            });
+
+            // Act
+            await requireSignIn(req, res, next);
+
+            // Assert
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.send).toHaveBeenCalledWith({
+                success: false,
+                message: "Unauthorized Access",
             });
         });
     });
@@ -115,7 +111,7 @@ describe("authMiddleware", () => {
             expect(res.status).toHaveBeenCalledWith(401);
             expect(res.send).toHaveBeenCalledWith({
                 success: false,
-                message: "UnAuthorized Access",
+                message: "Admin Access Required",
             });
         });
 
@@ -130,11 +126,11 @@ describe("authMiddleware", () => {
             expect(res.status).toHaveBeenCalledWith(401);
             expect(res.send).toHaveBeenCalledWith({
                 success: false,
-                message: "UnAuthorized Access",
+                message: "User not found",
             });
         });
 
-        it("returns 401 if an error occurs", async () => {
+        it("returns 500 if an error occurs", async () => {
             // Arrange
             const error = new Error("Database error");
             userModel.findById.mockRejectedValue(error);
@@ -144,7 +140,7 @@ describe("authMiddleware", () => {
             await isAdmin(req, res, next);
 
             // Assert
-            expect(res.status).toHaveBeenCalledWith(401);
+            expect(res.status).toHaveBeenCalledWith(500);
             expect(res.send).toHaveBeenCalledWith({
                 success: false,
                 message: "Error in admin middleware",
