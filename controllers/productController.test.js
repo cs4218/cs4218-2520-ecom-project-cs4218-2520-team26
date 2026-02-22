@@ -127,6 +127,7 @@ afterEach(() => {
   console.log.mockRestore?.();
 });
 
+// Khoo Jing Xiang, A0252605L
 describe("createProductController", () => {
   it("should return 500 when name is missing", async () => {
     const req = { fields: { ...razerFields, name: "" }, files: {} };
@@ -440,6 +441,7 @@ describe("productPhotoController", () => {
   });
 });
 
+// Khoo Jing Xiang, A0252605L
 describe("deleteProductController", () => {
   it("should delete product and returns success", async () => {
     const chain = { select: jest.fn().mockResolvedValue(undefined) };
@@ -463,8 +465,6 @@ describe("deleteProductController", () => {
 
   it("should send an error payload when delete fails", async () => {
     const err = new Error("delete failed");
-    // if controller does: await productModel.findByIdAndDelete(...).select(...)
-    // then findByIdAndDelete must return object with select() that rejects.
     const chain = { select: jest.fn().mockRejectedValue(err) };
     productModel.findByIdAndDelete.mockReturnValue(chain);
 
@@ -482,7 +482,7 @@ describe("deleteProductController", () => {
     });
   });
 
-   
+// Khoo Jing Xiang, A0252605L   
 describe("updateProductController", () => {
   it("should return 500 when name is missing", async () => {
     const req = {
