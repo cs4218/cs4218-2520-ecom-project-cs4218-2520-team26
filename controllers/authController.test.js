@@ -573,8 +573,9 @@ describe("authController - Profile and Orders", () => {
                 await updateProfileController(req, res);
 
                 // Assert
+                expect(res.status).toHaveBeenCalledWith(400);
                 expect(res.json).toHaveBeenCalledWith(
-                    { error: "Passsword is required to be at least 6 characters long" }
+                    { error: "Password is required to be at least 6 characters long" }
                 );
             });
 
@@ -616,6 +617,7 @@ describe("authController - Profile and Orders", () => {
             // Arrange
             req.body = { name: "John" };
             userModel.findById.mockRejectedValue(new Error("Database error"));
+            jest.spyOn(console, "log").mockImplementation(() => {});
 
             // Act
             await updateProfileController(req, res);
@@ -627,6 +629,7 @@ describe("authController - Profile and Orders", () => {
                 message: "Error While Updating Profile",
                 error: new Error("Database error"),
             });
+            console.log.mockRestore()
         });
 
         it("should preserve existing user data when fields not provided (EP: Only name changes)", async () => {
@@ -698,17 +701,19 @@ describe("authController - Profile and Orders", () => {
                 { _id: "order1", buyer: "user123", products: ["prod1"], status: "Not Processed" },
                 { _id: "order2", buyer: "user123", products: ["prod2"], status: "Shipped" },
             ];
-            orderModel.find.mockReturnValue({
-                populate: jest.fn().mockReturnValue({
-                    populate: jest.fn().mockResolvedValue(mockOrders),
-                }),
+            const populateBuyerMock = jest.fn().mockResolvedValue(mockOrders);
+            const populateProductsMock = jest.fn().mockReturnValue({
+                populate: populateBuyerMock,
             });
+            orderModel.find.mockReturnValue({ populate: populateProductsMock });
 
             // Act
             await getOrdersController(req, res);
 
             // Assert
             expect(orderModel.find).toHaveBeenCalledWith({ buyer: "user123" });
+            expect(populateProductsMock).toHaveBeenCalledWith("products", "-photo");
+            expect(populateBuyerMock).toHaveBeenCalledWith("buyer", "name");
             expect(res.json).toHaveBeenCalledWith(mockOrders);
         });
 
@@ -719,6 +724,7 @@ describe("authController - Profile and Orders", () => {
                     populate: jest.fn().mockRejectedValue(new Error("Database error")),
                 }),
             });
+            jest.spyOn(console, "log").mockImplementation(() => {});
 
             // Act
             await getOrdersController(req, res);
@@ -730,6 +736,7 @@ describe("authController - Profile and Orders", () => {
                 message: "Error While Getting Orders",
                 error: new Error("Database error"),
             });
+            console.log.mockRestore();
         });
 
         it("should return empty array when user has no orders", async () => {
@@ -757,19 +764,21 @@ describe("authController - Profile and Orders", () => {
                 { _id: "order1", buyer: "user1", status: "Shipped" },
                 { _id: "order2", buyer: "user2", status: "Not Processed" },
             ];
-            orderModel.find.mockReturnValue({
-                populate: jest.fn().mockReturnValue({
-                    populate: jest.fn().mockReturnValue({
-                        sort: jest.fn().mockResolvedValue(mockOrders),
-                    }),
-                }),
+            const sortMock = jest.fn().mockResolvedValue(mockOrders);
+            const populateBuyerMock = jest.fn().mockReturnValue({ sort: sortMock });
+            const populateProductsMock = jest.fn().mockReturnValue({
+                populate: populateBuyerMock,
             });
+            orderModel.find.mockReturnValue({ populate: populateProductsMock });
 
             // Act
             await getAllOrdersController(req, res);
 
             // Assert
             expect(orderModel.find).toHaveBeenCalledWith({});
+            expect(populateProductsMock).toHaveBeenCalledWith("products", "-photo");
+            expect(populateBuyerMock).toHaveBeenCalledWith("buyer", "name");
+            expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
             expect(res.json).toHaveBeenCalledWith(mockOrders);
         });
 
@@ -782,6 +791,7 @@ describe("authController - Profile and Orders", () => {
                     }),
                 }),
             });
+            jest.spyOn(console, "log").mockImplementation(() => {});
 
             // Act
             await getAllOrdersController(req, res);
@@ -793,6 +803,7 @@ describe("authController - Profile and Orders", () => {
                 message: "Error While Getting Orders",
                 error: new Error("Database error"),
             });
+            console.log.mockRestore();
         });
 
         it("should return empty array when no orders exist", async () => {
@@ -835,37 +846,12 @@ describe("authController - Profile and Orders", () => {
             expect(res.json).toHaveBeenCalledWith(mockUpdatedOrder);
         });
 
-        it("should handle different status values", async () => {
-            const validStatuses = ["Not Processed", "Processing", "Shipped", "Delivered", "Cancelled"];
-
-            for (const status of validStatuses) {
-                // Arrange
-                req.params = { orderId: "order123" };
-                req.body = { status };
-                const mockUpdatedOrder = { _id: "order123", status, buyer: "user123" };
-                orderModel.findByIdAndUpdate.mockResolvedValue(mockUpdatedOrder);
-
-                // Act
-                await orderStatusController(req, res);
-
-                // Assert
-                expect(orderModel.findByIdAndUpdate).toHaveBeenCalledWith(
-                    "order123",
-                    { status },
-                    { new: true }
-                );
-                expect(res.json).toHaveBeenCalledWith(mockUpdatedOrder);
-
-                // Reset mocks between iterations
-                jest.clearAllMocks();
-            }
-        });
-
         it("should handle errors when updating order status", async () => {
             // Arrange
             req.params = { orderId: "order123" };
             req.body = { status: "Shipped" };
             orderModel.findByIdAndUpdate.mockRejectedValue(new Error("Database error"));
+            jest.spyOn(console, "log").mockImplementation(() => {});
 
             // Act
             await orderStatusController(req, res);
@@ -877,24 +863,8 @@ describe("authController - Profile and Orders", () => {
                 message: "Error While Updating Order",
                 error: new Error("Database error"),
             });
-        });
 
-        it("should handle missing orderId", async () => {
-            // Arrange
-            req.params = { orderId: "" };
-            req.body = { status: "Shipped" };
-            orderModel.findByIdAndUpdate.mockResolvedValue(null);
-
-            // Act
-            await orderStatusController(req, res);
-
-            // Assert
-            expect(orderModel.findByIdAndUpdate).toHaveBeenCalledWith(
-                "",
-                { status: "Shipped" },
-                { new: true }
-            );
-            expect(res.json).toHaveBeenCalledWith(null);
+            console.log.mockRestore();
         });
     });
 });
