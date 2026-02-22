@@ -9,10 +9,6 @@ import { clear } from 'console';
 import { useAuth } from '../../context/auth';
 import { message } from 'antd';
 
-/**
- * Created by: Nicholas Koh Zi Lun (A0272806B)
- */
-
 // Mocks
 jest.mock('axios');
 
@@ -89,6 +85,7 @@ function fillLoginForm() {
     fireEvent.change(screen.getByPlaceholderText(loginFormFields.password), { target: { value: "password123" } });
 }
 
+// Nicholas Koh Zi Lun (A0272806B) - Unit tests for Login.js
 describe('Login Component', () => {
     beforeEach(() => {
         jest.clearAllMocks();

@@ -5,10 +5,6 @@ import AdminDashboard from "./AdminDashboard";
 import { useAuth } from "../../context/auth";
 import { before } from "node:test";
 
-/**
- * Created by: Nicholas Koh Zi Lun (A0272806B)
- */
-
 // Mocks
 jest.mock("../../context/auth", () => ({
   useAuth: jest.fn(),
@@ -32,7 +28,7 @@ const mockAdminData = {
 }
 const mockToken = "mock-token"
 
-// Tests
+// Nicholas Koh Zi Lun (A0272806B) - Unit tests for AdminDashboard.js
 describe("AdminDashboard", () => {
     beforeEach(() => {
         jest.clearAllMocks();

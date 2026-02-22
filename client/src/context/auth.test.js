@@ -3,10 +3,6 @@ import axios from "axios";
 import { AuthProvider, useAuth } from "./auth";
 import React from "react";
 
-/**
- * Created by: Nicholas Koh Zi Lun (A0272806B)
- */
-
 jest.mock("axios");
 
 // Mock Data
@@ -52,7 +48,7 @@ function setAuthData(user, token) {
     }));
 }
 
-// Tests
+// Nicholas Koh Zi Lun (A0272806B) - Unit tests for auth.js
 describe("auth.js Unit Tests", () => {
     beforeEach(() => {
         mockLocalStorage();

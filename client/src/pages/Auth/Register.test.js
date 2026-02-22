@@ -6,10 +6,6 @@ import '@testing-library/jest-dom/extend-expect';
 import toast from 'react-hot-toast';
 import Register from './Register';
 
-/**
- * Created by: Nicholas Koh Zi Lun (A0272806B)
- */
-
 // Mocks
 jest.mock('axios');
 
@@ -115,7 +111,7 @@ function fillValidFormWithMockData() {
 }
       
 
-// Tests
+// Nicholas Koh Zi Lun (A0272806B) - Unit tests for Register.js
 describe('Register Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();

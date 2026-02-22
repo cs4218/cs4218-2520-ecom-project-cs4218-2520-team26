@@ -4,10 +4,6 @@ import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import AdminMenu from "./AdminMenu";
 
-/**
- * Created by: Nicholas Koh Zi Lun (A0272806B)
-*/
-
 // Helper functions
 function renderAdminMenu() {
     return render(
@@ -17,7 +13,7 @@ function renderAdminMenu() {
     );
 }
 
-// Tests
+// Nicholas Koh Zi Lun (A0272806B) - Unit tests for AdminMenu.js
 describe("AdminMenu", () => {
     it("renders the Admin Panel heading", () => {
         // Act
