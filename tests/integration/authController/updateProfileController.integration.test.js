@@ -1,9 +1,10 @@
+// Ashley Chang Le Xuan, A0252633J
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
-import { updateProfileController } from "./authController.js";
-import userModel from "../models/userModel.js";
-import { comparePassword, hashPassword } from "../helpers/authHelper.js";
+import { updateProfileController } from "../../../controllers/authController.js";
+import userModel from "../../../models/userModel.js";
+import { comparePassword, hashPassword } from "../../../helpers/authHelper.js";
 
 const createMockResponse = () => {
   const res = {};
