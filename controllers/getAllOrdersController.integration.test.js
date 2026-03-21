@@ -80,6 +80,68 @@ beforeEach(async () => {
 });
 
 describe("getAllOrdersController integration with orderModel", () => {
+  describe("EP - Order collection partitions", () => {
+    it("EP: returns all orders regardless of buyer when orders exist", async () => {
+      // Arrange
+      const buyerOne = await createUser({
+        name: "Buyer One",
+        email: "all-orders-buyer-1@test.com",
+      });
+      const buyerTwo = await createUser({
+        name: "Buyer Two",
+        email: "all-orders-buyer-2@test.com",
+      });
+      const productOne = await createProduct({
+        name: "All Orders Product 1",
+        slug: "all-orders-product-1",
+        price: 110,
+      });
+      const productTwo = await createProduct({
+        name: "All Orders Product 2",
+        slug: "all-orders-product-2",
+        price: 210,
+      });
+
+      await createOrder({
+        buyerId: buyerOne._id,
+        productIds: [productOne._id],
+        status: "Processing",
+      });
+      await createOrder({
+        buyerId: buyerTwo._id,
+        productIds: [productTwo._id],
+        status: "Shipped",
+      });
+
+      const req = {};
+      const res = createMockResponse();
+
+      // Act
+      await getAllOrdersController(req, res);
+
+      // Assert
+      const returnedOrders = res.json.mock.calls[0][0];
+      expect(returnedOrders).toHaveLength(2);
+
+      const buyerIds = returnedOrders.map((order) => order.buyer._id.toString());
+      expect(buyerIds).toEqual(
+        expect.arrayContaining([buyerOne._id.toString(), buyerTwo._id.toString()])
+      );
+    });
+
+    it("EP: returns an empty array when no orders exist", async () => {
+      // Arrange
+      const req = {};
+      const res = createMockResponse();
+
+      // Act
+      await getAllOrdersController(req, res);
+
+      // Assert
+      expect(res.json).toHaveBeenCalledWith([]);
+    });
+  });
+
   it("returns all orders sorted by createdAt descending", async () => {
     // Arrange
     const buyer = await createUser({
@@ -122,5 +184,74 @@ describe("getAllOrdersController integration with orderModel", () => {
     expect(returnedOrders).toHaveLength(2);
     expect(returnedOrders[0]._id.toString()).toBe(secondOrder._id.toString());
     expect(returnedOrders[1]._id.toString()).toBe(firstOrder._id.toString());
+  });
+
+  it("populates product details and excludes product photo binary payload", async () => {
+    // Arrange
+    const buyer = await createUser({
+      name: "Population Buyer",
+      email: "all-orders-population@test.com",
+    });
+    const laptop = await createProduct({
+      name: "Laptop",
+      slug: "laptop",
+      price: 999,
+    });
+    const mouse = await createProduct({
+      name: "Mouse",
+      slug: "mouse",
+      price: 29,
+    });
+    await createOrder({
+      buyerId: buyer._id,
+      productIds: [laptop._id, mouse._id],
+      status: "Processing",
+    });
+
+    const req = {};
+    const res = createMockResponse();
+
+    // Act
+    await getAllOrdersController(req, res);
+
+    // Assert
+    const firstOrder = res.json.mock.calls[0][0][0];
+    expect(firstOrder.products).toHaveLength(2);
+    const productNames = firstOrder.products.map((product) => product.name);
+    expect(productNames).toEqual(expect.arrayContaining(["Laptop", "Mouse"]));
+    expect(firstOrder.products[0].photo?.data).toBeUndefined();
+    expect(firstOrder.products[1].photo?.data).toBeUndefined();
+  });
+
+  it("populates buyer with name only (without sensitive fields)", async () => {
+    // Arrange
+    const buyer = await createUser({
+      name: "Visible Buyer Name",
+      email: "all-orders-buyer-fields@test.com",
+    });
+    const product = await createProduct({
+      name: "Buyer Field Product",
+      slug: "buyer-field-product",
+      price: 55,
+    });
+    await createOrder({
+      buyerId: buyer._id,
+      productIds: [product._id],
+      status: "Processing",
+    });
+
+    const req = {};
+    const res = createMockResponse();
+
+    // Act
+    await getAllOrdersController(req, res);
+
+    // Assert
+    const returnedBuyer = res.json.mock.calls[0][0][0].buyer;
+    expect(returnedBuyer.name).toBe("Visible Buyer Name");
+    expect(returnedBuyer.email).toBeUndefined();
+    expect(returnedBuyer.phone).toBeUndefined();
+    expect(returnedBuyer.password).toBeUndefined();
+    expect(returnedBuyer.answer).toBeUndefined();
   });
 });
