@@ -80,16 +80,133 @@ beforeEach(async () => {
 });
 
 describe("orderStatusController integration with orderModel", () => {
-  it("updates order status and persists the change", async () => {
+  describe("EP - Order existence partitions", () => {
+    it("EP: updates status when target order exists", async () => {
+      // Arrange
+      const buyer = await createUser({
+        name: "Status User",
+        email: "orders-status@test.com",
+      });
+      const product = await createProduct({
+        name: "Status Product",
+        slug: "status-product",
+        price: 55,
+      });
+      const order = await createOrder({
+        buyerId: buyer._id,
+        productIds: [product._id],
+        status: "Not Processed",
+      });
+
+      const req = {
+        params: { orderId: order._id.toString() },
+        body: { status: "Delivered" },
+      };
+      const res = createMockResponse();
+
+      // Act
+      await orderStatusController(req, res);
+
+      // Assert
+      expect(res.json).toHaveBeenCalledTimes(1);
+      const responseOrder = res.json.mock.calls[0][0];
+      expect(responseOrder.status).toBe("Delivered");
+
+      const persistedOrder = await orderModel.findById(order._id).lean();
+      expect(persistedOrder.status).toBe("Delivered");
+    });
+
+    it("EP: returns null when target order does not exist", async () => {
+      // Arrange
+      const nonExistentOrderId = new mongoose.Types.ObjectId().toString();
+      const req = {
+        params: { orderId: nonExistentOrderId },
+        body: { status: "Shipped" },
+      };
+      const res = createMockResponse();
+
+      // Act
+      await orderStatusController(req, res);
+
+      // Assert
+      expect(res.json).toHaveBeenCalledWith(null);
+    });
+  });
+
+  describe("EP - Valid status class partitions", () => {
+    it("EP: updates to 'Processing' and persists change", async () => {
+      // Arrange
+      const buyer = await createUser({
+        name: "Processing User",
+        email: "orders-processing@test.com",
+      });
+      const product = await createProduct({
+        name: "Processing Product",
+        slug: "processing-product",
+        price: 35,
+      });
+      const order = await createOrder({
+        buyerId: buyer._id,
+        productIds: [product._id],
+        status: "Not Processed",
+      });
+
+      const req = {
+        params: { orderId: order._id.toString() },
+        body: { status: "Processing" },
+      };
+      const res = createMockResponse();
+
+      // Act
+      await orderStatusController(req, res);
+
+      // Assert
+      const updatedOrder = await orderModel.findById(order._id).lean();
+      expect(updatedOrder.status).toBe("Processing");
+    });
+
+    it("EP: updates to 'Cancelled' and persists change", async () => {
+      // Arrange
+      const buyer = await createUser({
+        name: "Cancelled User",
+        email: "orders-cancelled@test.com",
+      });
+      const product = await createProduct({
+        name: "Cancelled Product",
+        slug: "cancelled-product",
+        price: 75,
+      });
+      const order = await createOrder({
+        buyerId: buyer._id,
+        productIds: [product._id],
+        status: "Processing",
+      });
+
+      const req = {
+        params: { orderId: order._id.toString() },
+        body: { status: "Cancelled" },
+      };
+      const res = createMockResponse();
+
+      // Act
+      await orderStatusController(req, res);
+
+      // Assert
+      const updatedOrder = await orderModel.findById(order._id).lean();
+      expect(updatedOrder.status).toBe("Cancelled");
+    });
+  });
+
+  it("supports multiple sequential status updates", async () => {
     // Arrange
     const buyer = await createUser({
-      name: "Status User",
-      email: "orders-status@test.com",
+      name: "Sequential User",
+      email: "orders-sequential@test.com",
     });
     const product = await createProduct({
-      name: "Status Product",
-      slug: "status-product",
-      price: 55,
+      name: "Sequential Product",
+      slug: "sequential-product",
+      price: 60,
     });
     const order = await createOrder({
       buyerId: buyer._id,
@@ -97,21 +214,26 @@ describe("orderStatusController integration with orderModel", () => {
       status: "Not Processed",
     });
 
-    const req = {
-      params: { orderId: order._id.toString() },
-      body: { status: "Delivered" },
-    };
-    const res = createMockResponse();
+    const res1 = createMockResponse();
+    const res2 = createMockResponse();
+    const res3 = createMockResponse();
 
     // Act
-    await orderStatusController(req, res);
+    await orderStatusController(
+      { params: { orderId: order._id.toString() }, body: { status: "Processing" } },
+      res1
+    );
+    await orderStatusController(
+      { params: { orderId: order._id.toString() }, body: { status: "Shipped" } },
+      res2
+    );
+    await orderStatusController(
+      { params: { orderId: order._id.toString() }, body: { status: "Delivered" } },
+      res3
+    );
 
     // Assert
-    expect(res.json).toHaveBeenCalledTimes(1);
-    const responseOrder = res.json.mock.calls[0][0];
-    expect(responseOrder.status).toBe("Delivered");
-
-    const persistedOrder = await orderModel.findById(order._id).lean();
-    expect(persistedOrder.status).toBe("Delivered");
+    const finalOrder = await orderModel.findById(order._id).lean();
+    expect(finalOrder.status).toBe("Delivered");
   });
 });
