@@ -6,7 +6,7 @@
       "localStorage": [
         {
           "name": "auth",
-          "value": "{\"success\":true,\"message\":\"Login Successful\",\"user\":{\"_id\":\"69bfbd92308164034e5891d1\",\"name\":\"E2E Admin\",\"email\":\"e2e.admin@example.com\",\"phone\":\"90000000\",\"address\":\"E2E Admin Address\",\"role\":1},\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWJmYmQ5MjMwODE2NDAzNGU1ODkxZDEiLCJpYXQiOjE3NzQxODY1MjYsImV4cCI6MTc3NDc5MTMyNn0.rME7yNgjagNRDLMKoqSv4ESVVAz2ZyMswlLkkwZN_-E\"}"
+          "value": "{\"success\":true,\"message\":\"Login Successful\",\"user\":{\"_id\":\"69bfbd92308164034e5891d1\",\"name\":\"E2E Admin\",\"email\":\"e2e.admin@example.com\",\"phone\":\"90000000\",\"address\":\"E2E Admin Address\",\"role\":1},\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWJmYmQ5MjMwODE2NDAzNGU1ODkxZDEiLCJpYXQiOjE3NzQxOTI1NjMsImV4cCI6MTc3NDc5NzM2M30.dfGz1wAXg58U_XFA0kEVn5FI8OB3kK2-OPu4ZzIMqsI\"}"
         }
       ]
     }
