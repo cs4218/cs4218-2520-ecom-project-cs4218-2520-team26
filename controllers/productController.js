@@ -9,6 +9,32 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const LIST_CACHE_TTL_MS = 15_000;
+const productListCache = {
+  payloadJson: null,
+  expiresAt: 0,
+};
+
+const clearProductListCache = () => {
+  productListCache.payloadJson = null;
+  productListCache.expiresAt = 0;
+};
+
+const getCachedProductList = () => {
+  if (productListCache.payloadJson && productListCache.expiresAt > Date.now()) {
+    return productListCache.payloadJson;
+  }
+  clearProductListCache();
+  return null;
+};
+
+const setCachedProductList = (payloadJson) => {
+  productListCache.payloadJson = payloadJson;
+  productListCache.expiresAt = Date.now() + LIST_CACHE_TTL_MS;
+};
+
+export const __clearProductListCacheForTests = clearProductListCache;
+
 //payment gateway
 var gateway = new braintree.BraintreeGateway({
   environment: braintree.Environment.Sandbox,
@@ -46,6 +72,7 @@ export const createProductController = async (req, res) => {
       products.photo.contentType = photo.type;
     }
     await products.save();
+    clearProductListCache();
     res.status(201).send({
       success: true,
       message: "Product Created Successfully",
@@ -64,18 +91,30 @@ export const createProductController = async (req, res) => {
 //get all products
 export const getProductController = async (req, res) => {
   try {
+    const cachedPayloadJson = getCachedProductList();
+    if (cachedPayloadJson) {
+      return res
+        .status(200)
+        .type("application/json")
+        .send(cachedPayloadJson);
+    }
+
     const products = await productModel
       .find({})
-      .populate("category")
-      .select("-photo")
+      .select("name slug description price quantity shipping createdAt updatedAt")
+      .lean()
       .limit(12)
       .sort({ createdAt: -1 });
-    res.status(200).send({
+
+    const payload = {
       success: true,
       countTotal: products.length,
       message: "All Products Fetched Successfully",
       products,
-    });
+    };
+    setCachedProductList(JSON.stringify(payload));
+
+    res.status(200).send(payload);
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -129,6 +168,7 @@ export const productPhotoController = async (req, res) => {
 export const deleteProductController = async (req, res) => {
   try {
     await productModel.findByIdAndDelete(req.params.pid).select("-photo");
+    clearProductListCache();
     res.status(200).send({
       success: true,
       message: "Product Deleted Successfully",
@@ -177,6 +217,7 @@ export const updateProductController = async (req, res) => {
       products.photo.contentType = photo.type;
     }
     await products.save();
+    clearProductListCache();
     res.status(201).send({
       success: true,
       message: "Product Updated Successfully",

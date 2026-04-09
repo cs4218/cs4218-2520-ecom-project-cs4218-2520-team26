@@ -7,6 +7,7 @@ import {
     createCategoryController,
     updateCategoryController,
     deleteCategoryController,
+    __clearCategoryListCacheForTests,
 } from "../controllers/categoryController.js";
 
  
@@ -53,6 +54,7 @@ const createMockResponse = () => {
 describe("categoryController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    __clearCategoryListCacheForTests();
   });
 
   it("returns all categories on success", async () => {
@@ -61,7 +63,9 @@ describe("categoryController", () => {
       { _id: "1", name: "Cat 1" },
       { _id: "2", name: "Cat 2" },
     ];
-    categoryModel.find.mockResolvedValueOnce(categories);
+    categoryModel.find.mockReturnValueOnce({
+      lean: jest.fn().mockResolvedValueOnce(categories),
+    });
     const req = {};
     const res = createMockResponse();
 
@@ -81,7 +85,9 @@ describe("categoryController", () => {
   it("logs an error and returns 500 when fetching all categories fails", async () => {
     // Arrange
     const error = new Error("DB failure");
-    categoryModel.find.mockRejectedValueOnce(error);
+    categoryModel.find.mockReturnValueOnce({
+      lean: jest.fn().mockRejectedValueOnce(error),
+    });
     const req = {};
     const res = createMockResponse();
     const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
@@ -107,6 +113,7 @@ describe("categoryController", () => {
 describe("singleCategoryController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    __clearCategoryListCacheForTests();
   });
 
   it("returns a single category by slug on success", async () => {
@@ -160,6 +167,7 @@ describe("singleCategoryController", () => {
 describe("createCategoryController", () => {
   beforeEach(() => {
       jest.clearAllMocks();
+        __clearCategoryListCacheForTests();
   });
 
   it("should return 401 if name is missing", async () => {
@@ -231,6 +239,7 @@ describe("createCategoryController", () => {
 describe("updateCategoryController", () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        __clearCategoryListCacheForTests();
     });
 
     it("should update category", async () => {
@@ -269,6 +278,7 @@ describe("updateCategoryController", () => {
 describe("deleteCategoryController", () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        __clearCategoryListCacheForTests();
     });
 
     it("should delete category", async () => {

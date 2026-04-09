@@ -33,9 +33,14 @@ const mockUser = {
 };
 const mockToken = "mocktoken";
 
+const makeSelectQuery = (result) => ({
+  select: jest.fn().mockReturnThis(),
+  lean: jest.fn().mockResolvedValue(result),
+});
+
 // Tests
 describe("authController - Profile and Orders", () => {
-    let req, res;
+  let req, res;
 
     beforeEach(() => {
         req = {
@@ -226,12 +231,14 @@ describe("authController - Profile and Orders", () => {
             jest.clearAllMocks();
         });
 
-        it("should login successfully with valid credentials", async () => {
-            // Arrange
-            req.body = { email: mockUser.email, password: mockUser.password };
-            userModel.findOne.mockResolvedValue({ ...mockUser, password: "hashedpassword" });
-            comparePassword.mockResolvedValue(true);
-            JWT.sign.mockReturnValue(mockToken);
+    it("should login successfully with valid credentials", async () => {
+      // Arrange
+      req.body = { email: mockUser.email, password: mockUser.password };
+      userModel.findOne.mockReturnValue(
+        makeSelectQuery({ ...mockUser, password: "hashedpassword" }),
+      );
+      comparePassword.mockResolvedValue(true);
+      JWT.sign.mockReturnValue(mockToken);
 
             // Act
             await loginController(req, res);
@@ -286,10 +293,10 @@ describe("authController - Profile and Orders", () => {
             });
         });
 
-        it("should return 404 when email is not registered", async () => {
-            // Arrange
-            req.body = { email: mockUser.email, password: mockUser.password };
-            userModel.findOne.mockResolvedValue(null);
+    it("should return 404 when email is not registered", async () => {
+      // Arrange
+      req.body = { email: mockUser.email, password: mockUser.password };
+      userModel.findOne.mockReturnValue(makeSelectQuery(null));
 
             // Act
             await loginController(req, res);
@@ -303,11 +310,13 @@ describe("authController - Profile and Orders", () => {
             });
         });
 
-        it("should return 401 when password is invalid", async () => {
-            // Arrange
-            req.body = { email: mockUser.email, password: "wrongpassword" };
-            userModel.findOne.mockResolvedValue({ ...mockUser, password: "hashedpassword" });
-            comparePassword.mockResolvedValue(false);
+    it("should return 401 when password is invalid", async () => {
+      // Arrange
+      req.body = { email: mockUser.email, password: "wrongpassword" };
+      userModel.findOne.mockReturnValue(
+        makeSelectQuery({ ...mockUser, password: "hashedpassword" }),
+      );
+      comparePassword.mockResolvedValue(false);
 
             // Act
             await loginController(req, res);
@@ -322,10 +331,12 @@ describe("authController - Profile and Orders", () => {
             });
         });
 
-        it("should return 500 if an error occurs during login", async () => {
-            // Arrange
-            req.body = { email: mockUser.email, password: mockUser.password };
-            userModel.findOne.mockRejectedValue(new Error("Database error"));
+    it("should return 500 if an error occurs during login", async () => {
+      // Arrange
+      req.body = { email: mockUser.email, password: mockUser.password };
+      userModel.findOne.mockReturnValue({
+        select: jest.fn().mockRejectedValue(new Error("Database error")),
+      });
 
             // Act
             await loginController(req, res);

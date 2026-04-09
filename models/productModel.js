@@ -9,6 +9,8 @@ const productSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
+      unique: true,
+      index: true,
     },
     description: {
       type: String,
@@ -37,5 +39,8 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.index({ createdAt: -1 });
+productSchema.index({ category: 1, createdAt: -1 });
 
 export default mongoose.model("Products", productSchema);

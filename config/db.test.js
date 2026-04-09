@@ -7,7 +7,6 @@ jest.mock("mongoose", () => ({
   },
 }));
 
-
 jest.mock("colors", () => {
   const define = (prop) => {
     if (!Object.getOwnPropertyDescriptor(String.prototype, prop)) {
@@ -61,11 +60,19 @@ describe("connectDB", () => {
     await connectDB();
 
     // Assert
-    expect(mongoose.connect).toHaveBeenCalledWith("mongodb://fake-url-for-tests");
+    expect(mongoose.connect).toHaveBeenCalledWith(
+      "mongodb://fake-url-for-tests",
+      {
+        maxPoolSize: 20,
+        minPoolSize: 5,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      },
+    );
     expect(console.log).toHaveBeenCalledTimes(1);
 
     expect(console.log.mock.calls[0][0]).toContain(
-      "Connected To Mongodb Database localhost"
+      "Connected To Mongodb Database localhost",
     );
   });
 
@@ -75,10 +82,18 @@ describe("connectDB", () => {
     mongoose.connect.mockRejectedValueOnce(err);
 
     // Act
-    await connectDB();
+    await expect(connectDB()).rejects.toThrow("boom");
 
     // Assert
-    expect(mongoose.connect).toHaveBeenCalledWith("mongodb://fake-url-for-tests");
+    expect(mongoose.connect).toHaveBeenCalledWith(
+      "mongodb://fake-url-for-tests",
+      {
+        maxPoolSize: 20,
+        minPoolSize: 5,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      },
+    );
     expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.log.mock.calls[0][0]).toContain("Error in Mongodb");
     expect(console.log.mock.calls[0][0]).toContain("boom");

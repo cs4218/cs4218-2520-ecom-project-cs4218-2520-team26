@@ -79,6 +79,7 @@ import {
   productCategoryController,
   braintreeTokenController,
   brainTreePaymentController,
+  __clearProductListCacheForTests,
 } from "./productController.js";
 
 const makeRes = () => {
@@ -94,6 +95,7 @@ const chainQuery = (finalValue, { reject = false } = {}) => {
   const q = {
     populate: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     sort: jest.fn().mockReturnThis(),
   };
@@ -120,6 +122,7 @@ const razerFields = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  __clearProductListCacheForTests();
   jest.spyOn(console, "log").mockImplementation(() => {});
 });
 
@@ -329,8 +332,10 @@ describe("getProductController", () => {
 
     // Assert
     expect(productModel.find).toHaveBeenCalledWith({});
-    expect(q.populate).toHaveBeenCalledWith("category");
-    expect(q.select).toHaveBeenCalledWith("-photo");
+    expect(q.select).toHaveBeenCalledWith(
+      "name slug description price quantity shipping createdAt updatedAt",
+    );
+    expect(q.lean).toHaveBeenCalled();
     expect(q.limit).toHaveBeenCalledWith(12);
     expect(q.sort).toHaveBeenCalledWith({ createdAt: -1 });
 
