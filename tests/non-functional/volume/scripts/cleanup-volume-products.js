@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import connectDB from "../../../../config/db.js";
 import Product from "../../../../models/productModel.js";
 
+// Earnest Suprapmo, A0251966U
+
 dotenv.config();
 
 async function cleanupVolumeProducts() {

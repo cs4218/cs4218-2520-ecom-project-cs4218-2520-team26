@@ -6,6 +6,8 @@ import connectDB from "../../../../config/db.js";
 import Product from "../../../../models/productModel.js";
 import Category from "../../../../models/categoryModel.js";
 
+// Earnest Suprapmo, A0251966U
+
 dotenv.config();
 
 const TARGET_PRODUCT_COUNT = 100000;
